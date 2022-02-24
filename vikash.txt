@@ -1,0 +1,200 @@
+Model:--
+public class Student
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Mobile { get; set; }
+        public string Address { get; set; }
+        public string Department { get; set; }
+    }
+-------------------------------------------------
+public class ApplicationDbContext:DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options){ }
+
+        public DbSet<Student> students { get; set; }
+    }
+-----------------------------------------------------------
+Controller:--
+public class StudentController : Controller
+    {
+        private ApplicationDbContext Dbcontext;
+        public StudentController(ApplicationDbContext Dbcontext)
+        {
+            this.Dbcontext = Dbcontext;
+        }
+        public IActionResult Index()
+        {
+            var Stu = Dbcontext.students.ToList();
+            return View(Stu);
+        }
+        public IActionResult Create()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult Create(Student stu)
+        {
+            Dbcontext.students.Add(stu);
+            Dbcontext.SaveChanges();
+            return RedirectToAction("Index");
+        }
+        public IActionResult Delete(int id)
+        {
+            var obj = Dbcontext.students.SingleOrDefault(a => a.Id == id);
+            Dbcontext.students.Remove(obj);
+            Dbcontext.SaveChanges();
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Edit(int id)
+        {
+            var obj = Dbcontext.students.Find(id);
+            return View(obj);
+        }
+        [HttpPost]
+        public IActionResult Edit(int id, [Bind("Id,Name,Address,Mobile,Email,Department")] Student student)
+        {
+            if (id != 0)
+            {
+                student.Id = id;
+                Dbcontext.students.Update(student);
+                Dbcontext.SaveChanges();
+            }
+            return RedirectToAction("Index");
+        }
+    }
+--------------------------------------------------------------
+View:--
+Create
+@model SMS_Project.Models.Student
+<div class="row">
+    <div class="col-6 offset-3">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Create Student</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" asp-controller="Student">
+                    <div class="form-group">
+                        <label asp-for="Name"></label>
+                        <input asp-for="Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Mobile"></label>
+                        <input asp-for="Mobile" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Email"></label>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Address"></label>
+                        <input asp-for="Address" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Department"></label>
+                        <select asp-for="Department" class="form-control">
+                            <option>Choose Department</option>
+                            <option>IT</option>
+                            <option>Account</option>
+                            <option>HR</option>
+                            <option>Development</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Create" class="btn btn-success" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+-------------------------------------------------
+Edit:---
+@model SMS_Project.Models.Student
+<div class="row">
+    <div class="col-6 offset-3">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Update Student</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-controller="Student">
+                    <div class="form-group">
+                        <label asp-for="Name"></label>
+                        <input asp-for="Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Mobile"></label>
+                        <input asp-for="Mobile" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Email"></label>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Address"></label>
+                        <input asp-for="Address" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Department"></label>
+                        <select asp-for="Department" class="form-control">
+                            <option>Choose Department</option>
+                            <option>IT</option>
+                            <option>Account</option>
+                            <option>HR</option>
+                            <option>Development</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Save" class="btn btn-success" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+-------------------------------------------------
+Index:--
+@model IEnumerable<SMS_Project.Models.Student>
+<html>
+<head>
+</head>
+<body>
+    <h4 class="text-center"> Welcome</h4>
+</body>
+</html>
+<table class="table table-bordered">
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Mobile</th>
+        <th>Address</th>
+        <th>Department</th>
+        <th>Delete</th>
+        <th>Edit</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.Name</td>
+            <td>@item.Email</td>
+            <td>@item.Mobile</td>
+            <td>@item.Address</td>
+            <td>@item.Department</td>
+            <td> <a asp-action="Delete" asp-controller="Student" asp-route-Id="@item.Id">Delete</a></td>
+            <td><a asp-action="Edit" asp-controller="Student" asp-route-id="@item.Id">Edit</a></td>
+        </tr>
+    }
+</table>
+-----------------------------------------------------
+public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddControllersWithViews();
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Cnn")));
+            
+        }
